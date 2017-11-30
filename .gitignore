@@ -11,6 +11,8 @@
 *.ilk
 *.map
 *.exp
+# SiLabs linker??
+*.lk
 
 # Precompiled Headers
 *.gch
@@ -60,11 +62,12 @@ dkms.conf
 *.omf
 *.adb
 *.asm
-*.lk
-*.swp
-*.swo
 *.rst
 *.rel
 *.lst
 *.sym
 *.wsp
+
+# Swap files
+*.swp
+*.swo

@@ -1,13 +1,15 @@
 # Tasks
 
 ## Matt
+- [ ] Compass
 - [ ] Checkoff
 
 ## Sydney
+- [ ] Ranger
 - [ ] Checkoff
 
 ## Tom
-- [x] Cleaning up start-stop condition while loops
+- [ ] Setup
 - [ ] Checkoff
 
 
