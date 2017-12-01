@@ -78,12 +78,13 @@ OTHER/Joint?
 > 2. kp = 5, kd = 0
 >
 >With differential gain:
-> 3. kp = 0.1, kd = 10
-> 4. kp = 0.5, kd = 70
-> 5. kp = 3, kd = 70
-> 6. kp = 3, kd = 180
-> 7. kp = 12, kd = 70
-> 8. kp = 12, kd = 180
+> 1. kp = 0.1, kd = 10
+> 2. kp = 0.5, kd = 70
+> 3. kp = 3, kd = 70
+> 4. kp = 3, kd = 180
+> 5. kp = 12, kd = 70
+> 6. kp = 12, kd = 180
+>
 >Additionally, an optimal gain combination should be found.
 >*Use other gain values if you cannot get all of the types of responses—critically damped, underdamped, overdamped, and unstable.*
 
