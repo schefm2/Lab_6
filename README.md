@@ -1,17 +1,26 @@
 # Tasks
-
 ## Matt
 - [ ] Compass
 - [ ] Checkoff
+- [ ] Update `Start_Parameters()`
+- [ ] Update `calibrate()` to allow for larger gain setting
+- [ ] Update `Set_Servo_PWM()`
+- [ ] Pseudocode
 
 
 ## Sydney
 - [ ] Ranger
-- [ ] PCA_ISR from Lab 6
+- [ ] PCA_ISR (change timing logic to Lab 5's style)
+- [ ] Function to change thrust angle, to be called in `Start_Parameters()`
+- [ ] Update `Set_Motor_PWM`
 - [ ] Checkoff
 
 ## Tom
 - [ ] Setup
+- [ ] Main logic loop
+- [ ] Battery voltage A/D conversion
+- [ ] Variable nomenclature
+- [ ] Update `Print_Data()`
 - [ ] Checkoff
 
 
@@ -19,9 +28,8 @@
 LITEC Lab 6
 
 ## Project Requirements
-
 ### Hardware
-1. 
+The hardware of this project is already constructed.
 
 
 ### Software
@@ -30,6 +38,15 @@ LITEC Lab 6
 3. Gains entered with the keypad or keyboard (*as in one or the other, or as in both must be functioning?*)
 4. Desired heading initially set using keypad or keyboard, but modified using the ranger. There should be a **neutral height** setting to work around.
 5. Pulse width for tail fan based on error of desired heading and actual heading (which is measured by the compass).
+6. Servo controls the thrust fan angles
+7. Thrust fan angles will be set so that the fans are vertical to the table, and used to turn the gondola instead of the tail fan. **The two thrust fans must spin in opposite directions!**
+8. For this semester, **the tail fan will not be used!**
+9. **Neutral height will be set to 50 [cm] with a small deadband**. Increasing the ranger distance will turn the gondola clockwise to a max offset of 180 degrees, and decreasing the ranger distance will turn it counterclockwise to -180 degrees max.
+10. **Include a routine for adjusting the thrust angle to vertical**, as it will be different for each gondola.
+11. thrust fans will spin in opposite directions, but the correct direction for the fans must be determined based on the heading error. 
+12. Using a XBAR of 0x25 (P0.4 to P0.7), CCM0 controls the rudder fan (**not used in this lab**), CCM1 controls the thrust angle, CCM2 controls left fan power, and CCM3 controls right fan power.
+13. A/D conversion of the battery voltage will take place on P1.3. The voltage divider is set up such that the ADC will read a voltage that is .236*(Battery Voltage).
+
 
 More specifics:
 COMPASS
@@ -52,34 +69,51 @@ OTHER/Joint?
 3. Print desired heading, actual heading, ranger heading, heading angle adjustment, thrust PW, battery voltage.
     Occasionally print modified desired heading to save time/reduce clutter; print as CSV
 
-```C
 
-```
+### Data Acquisition
+1. Turn off all fans and print data for a full 360 degree spin. Set the derivative gain to 0. When heading error reaches 180 degrees, it should flip its sign. This is good for detecting errors in heading calculations.
+2. A second data set during regular operation, use the following different gain combinations:
+>Without differential gain:
+>   Case 1: kp = 0.1, kd = 0
+>   Case 2: kp = 5, kd = 0
+>With differential gain:
+>   Case 3: kp = 0.1, kd = 10
+>   Case 4: kp = 0.5, kd = 70
+>   Case 5: kp = 3, kd = 70
+>   Case 6: kp = 3, kd = 180
+>   Case 7: kp = 12, kd = 70
+>   Case 8: kp = 12, kd = 180
+>Additionally, an optimal gain combination should be found.
+>*Use other gain values if you cannot get all of the types of responses—critically damped, underdamped, overdamped, and unstable.*
 
-```C
 
-```
-
-### Gondola Behavior
-1. 
 
 
 ## Other Considerations
-1. 
-
+1. The fans have greater thrust in the forward direction than in the reverse.
+2. Type casting for signed longs on the right side of Pulse Width setting equations is recommended, as this lab works with very large gains.
+An example using Kp as the proportional gain and Kd as the differential gain (with rudder_pw declared as unsigned int). tmp_pw must be a signed long to handle large or negative values.
 ```C
-
+error = desired_heading–heading;
+tmp_pw = (long)Kp*error+(long)Kd*(error-previous_error)+RUDDER_CENTER;
+if (tmp_pw > (long)RUDDER_LEFT) tmp_pw = RUDDER_LEFT;
+else if (tmp_pw < (long)RUDDER_RIGHT) tmp_pw = RUDDER_RIGHT;
+rudder_pw = (unsigned int)tmp_pw;
+previous_error = error;
 ```
+3. One may consider smoothing out the heading readings by averaging a few values (*save this for later?*)
+4. Start with only P control, then add in the D control.
+5. Display battery voltage in mV on LCD and terminal to avoid the use of floats.
+6. Optional use of only the tail fan to get the speed of the gondola's rotation down to a certain value, then switching to standard PD control.
 
 # Completed Tasks
-
 ## Matt
-- [x] Refactor PCA_ISR logic for reading flags
+- [x] Lorem ipsum
 
 
 ## Sydney
-- [x] Refactor Print_Data
+- [x] Reconfigure ports
 
 
 ## Tom
-- [x] Determine main loop logic
+- [x] Lorem ipsum
