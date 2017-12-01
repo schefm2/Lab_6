@@ -74,15 +74,16 @@ OTHER/Joint?
 1. Turn off all fans and print data for a full 360 degree spin. Set the derivative gain to 0. When heading error reaches 180 degrees, it should flip its sign. This is good for detecting errors in heading calculations.
 2. A second data set during regular operation, use the following different gain combinations:
 >Without differential gain:
->   Case 1: kp = 0.1, kd = 0
->   Case 2: kp = 5, kd = 0
+> 1. kp = 0.1, kd = 0
+> 2. kp = 5, kd = 0
+>
 >With differential gain:
->   Case 3: kp = 0.1, kd = 10
->   Case 4: kp = 0.5, kd = 70
->   Case 5: kp = 3, kd = 70
->   Case 6: kp = 3, kd = 180
->   Case 7: kp = 12, kd = 70
->   Case 8: kp = 12, kd = 180
+> 3. kp = 0.1, kd = 10
+> 4. kp = 0.5, kd = 70
+> 5. kp = 3, kd = 70
+> 6. kp = 3, kd = 180
+> 7. kp = 12, kd = 70
+> 8. kp = 12, kd = 180
 >Additionally, an optimal gain combination should be found.
 >*Use other gain values if you cannot get all of the types of responses—critically damped, underdamped, overdamped, and unstable.*
 
