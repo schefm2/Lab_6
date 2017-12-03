@@ -46,12 +46,14 @@ void Pause(void);
 void Wait(void);
 unsigned int pow(unsigned int a, unsigned char b);
 unsigned int calibrate(void);
+unsigned int Calculate_Voltage(void);
 unsigned char parallel_input(void);
 unsigned char read_AD_input(unsigned char pin_number);
 
 //High Level Functions
 void Start_Parameters(void);
 void Calibrate_Angle(void);
+void Calibrate_Fans(void);
 void Set_Motion(void);
 void Set_Neutral(void);
 void Print_Data(void);
@@ -84,6 +86,7 @@ void main(void)
 
     Start_Parameters();	//Set gains
     Calibrate_Angle();  //Set the thrust angle of the gondola
+    //Calibrate_Fans(); //Useful for diagnosing problems with the fans
     
 	//Reset time/logic-keeping variables
 	compass_flag = ranger_flag = print_flag = 0;
@@ -93,10 +96,11 @@ void main(void)
     while(1)
     {
         
-
+        battery_voltage = Calculate_Voltage();
         Set_Motion();	//Reads compass/ranger and sets the fan pulse widths
         //Set_Neutral();	//If the slide switch is ON, the car is in neutral and steering is centered
         Print_Data();	//Prints data required for plotting control algorithm performance
+        //Read_Print();   //Useful for testing if the compass and ranger function properly
         
         /*
         if ( range <= 50 && time >= 20 && first_obstacle == 0)
@@ -165,11 +169,11 @@ void Start_Parameters(void)
 	{
 		lcd_clear(); //clear screen
 		lcd_print("Enter prop gain:\n"); //print instructions
-		printf("\r\nSelect a proportional gain (0 to 1000). Press # to confirm.\r\n");
+		printf("\r\nSelect a proportional gain (0 to 50000). Press # to confirm.\r\n");
 		kp = calibrate();	//take input
 		Wait(); //wait a second
 	}
-	while (kp > 1000); //wait until you get appropriate gain
+	while (kp > 50000); //wait until you get appropriate gain
 	printf("\r\nYou selected %u as your proportional gain", kp); //print steering gain
     lcd_print("\nFinal value above");  
     Wait();
@@ -178,11 +182,11 @@ void Start_Parameters(void)
 	{
 		lcd_clear(); //clear screen
 		lcd_print("Enter diff gain:\n"); //print instructions
-		printf("\r\nSelect a differential gain (0 to 1000). Press # to confirm.\r\n");
+		printf("\r\nSelect a differential gain (0 to 50000). Press # to confirm.\r\n");
 		kd = calibrate();	//take 5 digit input
 		Wait(); //wait a second
 	}
-	while (kd > 1000); //wait until you get appropriate gain
+	while (kd > 50000); //wait until you get appropriate gain
 	printf("\r\nYou selected %u as your differential gain", kd); //print integral gain
     lcd_print("\nFinal value above");
     
@@ -255,7 +259,6 @@ void Print_Data(void)
     if(print_flag)
 		//Only prints ever ~100 ms
     {
-		//time += print_count/5;	//Ensures accurate time readings
         printf("\r\n%u, %d, %u, %u, %u, %u", desired_heading, heading_error, range, battery_voltage, Motor_PW, Servo_PW);
         lcd_clear();
         lcd_print("Error: %d\nRange: %u\nMotor: %u\nServo: %u", heading_error, range, Motor_PW, Servo_PW);
@@ -344,7 +347,7 @@ void Set_Servo_PWM(void)
 void Set_Motor_PWM(void)
 {
     //Equation from worksheet_11.c that was most reliable for calculating pulse width
-    Motor_PW = (signed long)MOTOR_NEUTRAL_PW+(signed long)kp*(signed long)heading_error+(signed long)kd*(signed long)(heading_error-previous_error);
+    Motor_PW = (float)MOTOR_NEUTRAL_PW - (float)kp/50*(float)heading_error - (float)kd/50*(float)(heading_error-previous_error);
 	
     //Keeps the pulse widths from straining the motor
     Motor_PW = (Motor_PW > MOTOR_FORWARD_PW) ? MOTOR_FORWARD_PW : Motor_PW;
@@ -352,6 +355,7 @@ void Set_Motor_PWM(void)
     
     //Set left, then right fans to opposite values
     PCA0CP2 = 0xFFFF - Motor_PW;
+    Pause();    //Put this in here to stop the gondola from only spinning one fan
     PCA0CP3 = 0xFFFF - (2*MOTOR_NEUTRAL_PW - Motor_PW); //Condensed form of Neutral - (Motor - Neutral)
     
 }
@@ -516,7 +520,7 @@ void Port_Init()
 {
 	P0MDOUT |= 0xF0;	//Set output pin for CEX0 to CEX3 in push-pull mode for P0.4 to P0.7
 	
-    P1MDOUT &= ~0x08;	//Set potentiometer pin (P1.3) to open drain
+    P1MDOUT &= ~0x08;	//Set battery voltage pin (P1.3) to open drain
 	P1 |= 0x08;			//Set impedance high on P1.3
 	P1MDIN &= ~0x08;	//Set P1.3 to analog input
 }
@@ -557,7 +561,7 @@ void PCA_Init(void)
     // reference to the sample code in Example 4.5 - Pulse Width Modulation implemented using
     // Use a 16 bit counter with SYSCLK/12.
     PCA0MD = 0x81;
-    PCA0CPM0 = PCA0CPM1 = PCA0CPM2 = PCA0CPM3 = 0xC2;		//Sets both CCM0 thru CCM3 in 16-bit compare mode, enables PWM
+    PCA0CPM0 = PCA0CPM1 = PCA0CPM2 = PCA0CPM3 = 0xC2;		//Sets CCM0 thru CCM3 in 16-bit compare mode, enables PWM
     PCA0CN = 0x40; //Enable PCA counter
 }
 
@@ -580,7 +584,7 @@ void PCA_ISR ( void ) __interrupt 9
         
         ranger_flag = (r_count > 4) ? 1 : ranger_flag ;
         compass_flag = (c_count > 2) ? 1 : compass_flag ;
-        print_flag = (print_count > 10) ? 1 : print_flag ; //print flag raised every ~100 ms
+        print_flag = (print_count > 5) ? 1 : print_flag ; //print flag raised every ~100 ms
     }
     PCA0CN &= 0x40; //Handle other interupt sources
     // reference to the sample code in Example 4.5 -Pulse Width Modulation implemented using
@@ -623,6 +627,48 @@ void Calibrate_Angle(void)
         PCA0CP1 = 0xFFFF - Servo_PW;
     }
     printf("\r\nYour final pulse width was: %u", Servo_PW);
+}
+
+//-----------------------------------------------------------------------------
+// Calibrate_Fans
+//-----------------------------------------------------------------------------
+//
+// 
+//
+void Calibrate_Fans(void)
+{
+    unsigned char temp = 0;
+    printf("\r\nPlease press l and r to change the motor PW.\r\nPress q to confirm the PW.\r\n");
+    while (temp != 'q')
+    {
+        temp = getchar();
+        if (temp == 'l')
+            Motor_PW -= 10;
+        if (temp == 'r')
+            Motor_PW += 10;
+        
+        //Prevent servo from straining pulse widths
+        Motor_PW = (Motor_PW < MOTOR_REVERSE_PW) ? MOTOR_REVERSE_PW : Motor_PW;
+        Motor_PW = (Motor_PW > MOTOR_FORWARD_PW) ? MOTOR_FORWARD_PW : Motor_PW;
+        
+        //Set left, then right fans to opposite values
+        PCA0CP2 = 0xFFFF - Motor_PW;
+        PCA0CP3 = 0xFFFF - (2*MOTOR_NEUTRAL_PW - Motor_PW); //Condensed form of Neutral - (Motor - Neutral)
+        printf("\r\nThis is the CCM3: %u", PCA0CP3);
+    }
+    printf("\r\nYour final pulse width was: %u", Servo_PW);
+}
+
+
+//-----------------------------------------------------------------------------
+// Calculate_Voltage
+//-----------------------------------------------------------------------------
+//
+// Returns the voltage of the battery in mV.
+//
+unsigned int Calculate_Voltage(void)
+{
+    return ((float)read_AD_input(3) / 255) * 10164;
 }
 
 //-----------------------------------------------------------------------------
