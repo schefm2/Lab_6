@@ -18,7 +18,7 @@
 
 //Left and right pulse widths set so that Servo isn't strained
 #define SERVO_LEFT_PW 2425
-#define SERVO_CENTER_PW 2895
+#define SERVO_CENTER_PW 3085
 #define SERVO_RIGHT_PW 3245
 
 #define MOTOR_REVERSE_PW 2027 
@@ -51,6 +51,7 @@ unsigned char read_AD_input(unsigned char pin_number);
 
 //High Level Functions
 void Start_Parameters(void);
+void Calibrate_Angle(void);
 void Set_Motion(void);
 void Set_Neutral(void);
 void Print_Data(void);
@@ -58,9 +59,10 @@ void Read_Print(void);
 
 //Global Variables
 unsigned char Data[5];	//Data array used to read and write to I2C Bus slaves
-unsigned int desired_heading, current_heading, range, Servo_PW, Motor_PW;
+signed long Motor_PW;
+unsigned int desired_heading, current_heading, range, battery_voltage, Servo_PW;
 unsigned char keyboard, keypad, r_count, c_count, print_count, wait_count;
-signed int heading_error;
+signed int heading_error, previous_error = 0;
 __xdata unsigned int kp = 0, kd = 0;    //Slow write, fast read memory for gains
 
 __bit servo_stop, motor_stop, compass_flag, ranger_flag, print_flag; //flags
@@ -80,20 +82,23 @@ void main(void)
     SMB_Init();
     ADC_Init();	//Must come after PCA_Init to allow capacitors to charge
 
-    Car_Parameters();	//Sets gain, desired_heading, and initial_speed
+    Start_Parameters();	//Set gains
+    Calibrate_Angle();  //Set the thrust angle of the gondola
     
 	//Reset time/logic-keeping variables
-	r_count = 0;
-	print_count = 0;
-    first_obstacle =0;
+	compass_flag = ranger_flag = print_flag = 0;
+    r_count = c_count = print_count = 0;
+    
 	
     while(1)
     {
+        
 
-        Set_Motion();	//Reads compass/ranger and sets their respective PW's
-        Set_Neutral();	//If the slide switch is ON, the car is in neutral and steering is centered
+        Set_Motion();	//Reads compass/ranger and sets the fan pulse widths
+        //Set_Neutral();	//If the slide switch is ON, the car is in neutral and steering is centered
         Print_Data();	//Prints data required for plotting control algorithm performance
-
+        
+        /*
         if ( range <= 50 && time >= 20 && first_obstacle == 0)
             //Detected something at/closer than 50, stop
         {
@@ -132,7 +137,7 @@ void main(void)
 			Motor_PW=MOTOR_NEUTRAL_PW;
         	PCA0CP2 = 0xFFFF - Motor_PW;	//Set car to neutral
 			Read_Print();	//Print and read data while stopped
-        }
+        } */
     }
 }
 
@@ -145,10 +150,11 @@ void main(void)
 //
 void Start_Parameters(void)
 {
-    Servo_PW = SERVO_CENTER_PW;		//Initialize car to straight steering and no movement
-    Motor_PW = MOTOR_NEUTRAL_PW;	//Set pulse to stop car
-    PCA0CP0 = 0xFFFF - Servo_PW;	//tell hardware to use new servo pulse width
-    PCA0CP2 = 0xFFFF - Motor_PW;	//tell hardware to use new motor pulse width
+    //Start with neutral pulse widths for motor and thrust angle
+    Servo_PW = SERVO_CENTER_PW;
+    Motor_PW = MOTOR_NEUTRAL_PW;
+    PCA0CP1 = 0xFFFF - Servo_PW;
+    PCA0CP2 = PCA0CP3 = 0xFFFF - Motor_PW;  //Sets both fans to neutral
 
     Wait();         //Wait for 1 second
     lcd_clear();    //clear lcd screen
@@ -180,6 +186,8 @@ void Start_Parameters(void)
 	printf("\r\nYou selected %u as your differential gain", kd); //print integral gain
     lcd_print("\nFinal value above");  
     Wait();
+    lcd_clear();
+    
 }
 
 //----------------------------------------------------------------------------
@@ -199,6 +207,7 @@ void Set_Motion(void)
 //----------------------------------------------------------------------------
 void Set_Neutral(void)
 {
+    /*
 	//set servo to center and stop motor
     if (SS)
     {
@@ -207,6 +216,7 @@ void Set_Neutral(void)
 
         while(SS) {}	//wait until slideswitch is turned OFF
     }
+    */
 }
 
 //----------------------------------------------------------------------------
@@ -229,14 +239,16 @@ void Read_Print(void)
 //----------------------------------------------------------------------------
 void Print_Data(void)
 {
-    if(print_count > 20)
-		//Only prints ever ~400 ms
+    if(print_flag)
+		//Only prints ever ~100 ms
     {
-		time += print_count/5;	//Ensures accurate time readings
-        print_count = 0;
-        printf("\r\n%u,%d,%u,%u", (int)time, heading_error, Servo_PW, range);
+		//time += print_count/5;	//Ensures accurate time readings
+        printf("\r\n%u, %d, %u, %u, %u, %u", desired_heading, heading_error, range, battery_voltage, Motor_PW, Servo_PW);
         lcd_clear();
-        lcd_print("Heading is: %u\nRange is: %u\nServo Cycle: %u\nMotor Cycle: %u", current_heading, range, (int)(((float)Servo_PW/28672)*100), (int)(((float)Motor_PW/28672)*100));
+        lcd_print("Error: %d\nRange: %u\nMotor: %u\nServo: %u", heading_error, range, Motor_PW, Servo_PW);
+        
+        print_flag = 0;     //reset flag and counter for printing to ensure 100 ms breaks
+        print_count = 0;    //between prints
     }
 }
 
@@ -252,22 +264,28 @@ void Print_Data(void)
 //
 void Read_Compass(void)
 {
-    if (!(r_count % 2) && r_count != 0)
+    if (compass_flag)
         //Trigger every 40 ms
     {
         i2c_read_data(COMPASS_ADDR, 2, Data, 2);	//Read two byte, starting at reg 2
         current_heading =(((unsigned int)Data[0] << 8) | Data[1]); //Combine the two values
         //Heading has units of tenths of a degree
 		
+        //Stores last heading_error before a new heading_error is calculated
+        previous_error = heading_error;
+        
 		heading_error = (signed int)desired_heading - current_heading;
 		//heading_error is now between -3599 and 3599
-		
+
 		//If the error is greater abs(1800) degree-tenths, then error is set to 
 		//explementary angle of original error
 		if (heading_error > 1800)
 			heading_error = heading_error - 3599;
 		if (heading_error < -1800)
 			heading_error = 3599 + heading_error;
+        
+        compass_flag = 0;
+        c_count = 0;
     }
 }
 
@@ -276,15 +294,17 @@ void Read_Compass(void)
 //----------------------------------------------------------------------------
 void Read_Ranger(void)
 {
-    if (r_count > 4)
+    if (ranger_flag)
         //Trigger every 80 ms
     {
-		r_count = 0;	//r_count reset here to give ranger time to receive its ping
         i2c_read_data(RANGER_ADDR, 2, Data, 2);
         range = (((unsigned int)Data[0] << 8) | Data[1]);
         //Overwrites prev data and updates range
         Data[0] = PING_CM;
         i2c_write_data (RANGER_ADDR, 0, Data, 1 );
+        
+        ranger_flag = 0;
+        r_count = 0; //r_count reset here to give ranger time to receive its ping
     }
 }
 
@@ -293,6 +313,7 @@ void Read_Ranger(void)
 //----------------------------------------------------------------------------
 void Set_Servo_PWM(void)
 {
+    /*
 	//Servo_PW set to value based on heading_error modified by gain set in Car_Parameters()
 	Servo_PW = gain*(heading_error) + SERVO_CENTER_PW;
 
@@ -301,6 +322,7 @@ void Set_Servo_PWM(void)
 	if (Servo_PW > SERVO_RIGHT_PW) Servo_PW = SERVO_RIGHT_PW;
 	if (Servo_PW < SERVO_LEFT_PW) Servo_PW = SERVO_LEFT_PW;
 	PCA0CP0 = 0xFFFF - Servo_PW;
+    */
 }
 
 //----------------------------------------------------------------------------
@@ -308,10 +330,17 @@ void Set_Servo_PWM(void)
 //----------------------------------------------------------------------------
 void Set_Motor_PWM(void)
 {
-	//When car is not in neutral, it runs at speed set in Car_Parameters() at
-	//beginning of program
-	Motor_PW = initial_speed;
-	PCA0CP2 = 0xFFFF - Motor_PW;
+    //Equation from worksheet_11.c that was most reliable for calculating pulse width
+    Motor_PW = (signed long)MOTOR_NEUTRAL_PW+(signed long)kp*(signed long)heading_error+(signed long)kd*(signed long)(heading_error-previous_error);
+	
+    //Keeps the pulse widths from straining the motor
+    Motor_PW = (Motor_PW > MOTOR_FORWARD_PW) ? MOTOR_FORWARD_PW : Motor_PW;
+    Motor_PW = (Motor_PW < MOTOR_REVERSE_PW) ? MOTOR_REVERSE_PW : Motor_PW;
+    
+    //Set left, then right fans to opposite values
+    PCA0CP2 = 0xFFFF - Motor_PW;
+    PCA0CP3 = 0xFFFF - (2*MOTOR_NEUTRAL_PW - Motor_PW); //Condensed form of Neutral - (Motor - Neutral)
+    
 }
 
 //----------------------------------------------------------------------------
@@ -378,8 +407,6 @@ unsigned int calibrate(void)
             {
                 value += Data[pressCheck++]*pow(10,isPress - 1);
             }
-            if (value > 0xFFFF)    //If the gain is set too high, set to saturation for the unsigned char gains
-                return 0xFFFF;
 			return value;	
         }
 
@@ -474,14 +501,11 @@ void ADC_Init(void)
 //-----------------------------------------------------------------------------
 void Port_Init()
 {
-	//Initailize POT
-	P1MDOUT |= 0x05;	//Set output pin for CEX0 and CEX2 in push-pull mode
-	P1MDOUT &= ~0x80;	//Set potentiometer pin (P1.7) to open drain
-	P1 |= 0x80;			//Set impedance high on P1.7
-	P1MDIN &= ~0x80;	//Set P1.7 to analog input
+	P0MDOUT |= 0xF0;	//Set output pin for CEX0 to CEX3 in push-pull mode for P0.4 to P0.7
 	
-	P3MDOUT &= ~0x80; //Pin 3.7 open drain
-	P3 |= 0x80; //Pin 3.7 high impedance
+    P1MDOUT &= ~0x08;	//Set potentiometer pin (P1.3) to open drain
+	P1 |= 0x08;			//Set impedance high on P1.3
+	P1MDIN &= ~0x08;	//Set P1.3 to analog input
 }
 
 //-----------------------------------------------------------------------------
@@ -505,7 +529,7 @@ void Interrupt_Init(void)
 //
 void XBR0_Init(void)
 {
-    XBR0 = 0x27;	//configure crossbar with UART, SPI, SMBus, and CEX channels as
+    XBR0 = 0x25;	//configure crossbar with UART, SPI, SMBus, and CEX channels as
 					//in worksheet
 }
 
@@ -520,7 +544,7 @@ void PCA_Init(void)
     // reference to the sample code in Example 4.5 - Pulse Width Modulation implemented using
     // Use a 16 bit counter with SYSCLK/12.
     PCA0MD = 0x81;
-    PCA0CPM0 = PCA0CPM2 = 0xC2;		//Sets both CCM0 and CCM2 in 16-bit compare mode, enables PWM
+    PCA0CPM0 = PCA0CPM1 = PCA0CPM2 = PCA0CPM3 = 0xC2;		//Sets both CCM0 thru CCM3 in 16-bit compare mode, enables PWM
     PCA0CN = 0x40; //Enable PCA counter
 }
 
@@ -540,6 +564,10 @@ void PCA_ISR ( void ) __interrupt 9
 		c_count++;
         print_count++;
         wait_count++;
+        
+        ranger_flag = (r_count > 4) ? 1 : ranger_flag ;
+        compass_flag = (c_count > 2) ? 1 : compass_flag ;
+        print_flag = (print_count > 10) ? 1 : print_flag ; //print flag raised every ~100 ms
     }
     PCA0CN &= 0x40; //Handle other interupt sources
     // reference to the sample code in Example 4.5 -Pulse Width Modulation implemented using
@@ -556,6 +584,34 @@ void SMB_Init()
     SMB0CR = 0x93;	//Sets SCL to 100 kHz (actually ~94594 Hz)
     ENSMB = 1;		//Enables SMB
 }
+
+//-----------------------------------------------------------------------------
+// Calibrate_Angle
+//-----------------------------------------------------------------------------
+//
+// 
+//
+void Calibrate_Angle(void)
+{
+    unsigned char temp = 0;
+    printf("\r\nPlease press l and r to rotate the thrust angle of the gondola.\r\nPress q to confirm the angle.\r\n");
+    while (temp != 'q')
+    {
+        temp = getchar();
+        if (temp == 'l')
+            Servo_PW -= 10;
+        if (temp == 'r')
+            Servo_PW += 10;
+        
+        //Prevent servo from straining pulse widths
+        Servo_PW = (Servo_PW < SERVO_LEFT_PW) ? SERVO_LEFT_PW : Servo_PW;
+        Servo_PW = (Servo_PW > SERVO_RIGHT_PW) ? SERVO_RIGHT_PW : Servo_PW;
+        
+        PCA0CP1 = 0xFFFF - Servo_PW;
+    }
+    printf("\r\nYour final pulse width was: %u", Servo_PW);
+}
+
 //-----------------------------------------------------------------------------
 
 
