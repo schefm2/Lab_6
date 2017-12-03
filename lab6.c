@@ -184,10 +184,23 @@ void Start_Parameters(void)
 	}
 	while (kd > 1000); //wait until you get appropriate gain
 	printf("\r\nYou selected %u as your differential gain", kd); //print integral gain
+    lcd_print("\nFinal value above");
+    
+    do
+	{
+		lcd_clear(); //clear screen
+		lcd_print("Enter heading:\n"); //print instructions
+		printf("\r\nSelect a desired heading (0 to 3599). Press # to confirm.\r\n");
+		desired_heading = calibrate();	//take input
+		Wait(); //wait a second
+	}
+	while (desired_heading > 3599); //wait until you get appropriate heading
+	printf("\r\nYou selected %u as your desired heading", desired_heading); //print desired heading
     lcd_print("\nFinal value above");  
     Wait();
-    lcd_clear();
     
+    Wait();
+    lcd_clear();
 }
 
 //----------------------------------------------------------------------------
