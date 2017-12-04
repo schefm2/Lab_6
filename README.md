@@ -1,23 +1,18 @@
 # Tasks
 ## Matt
-- [ ] Worksheet 11
 - [ ] Checkoff
 - [ ] Pseudocode
 
 
 ## Sydney
-- [ ] Worksheet 11
 - [ ] Checkoff
 - [ ] Pseudocode
 - [ ] Incorporate ranger to alter `desired_heading`
 - [ ] Comment code
 
 ## Tom
-- [ ] Worksheet 11
-- [ ] Main logic loop
-- [ ] Determine maximum battery voltage and change `Calculate_Voltage()` accordingly
-- [ ] Determine why `Print_Data()` prints Motor_PW incorrectly
 - [ ] Checkoff
+- [ ] Compiling Lab notebook
 
 
 # Lab_6
@@ -114,10 +109,18 @@ previous_error = error;
 - [x] PCA_ISR (change timing logic to Lab 5's style)
 - [x] Function to change thrust angle, to be called in `Start_Parameters()`
 - [x] Variable nomenclature
+- [x] Determine maximum battery voltage and change `Calculate_Voltage()` accordingly
+- [x] Determine why `Print_Data()` prints Motor_PW incorrectly
+- [x] Worksheet 11
 
 ## Sydney
 - [x] Reconfigure ports
-
+- [x] Worksheet 11
+- [x] Determine maximum battery voltage and change `Calculate_Voltage()` accordingly
+- [x] Determine why `Print_Data()` prints Motor_PW incorrectly
 
 ## Tom
 - [x] Lorem ipsum
+- [x] Worksheet 11
+- [x] Determine maximum battery voltage and change `Calculate_Voltage()` accordingly
+- [x] Determine why `Print_Data()` prints Motor_PW incorrectly
