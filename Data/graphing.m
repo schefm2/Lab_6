@@ -1,4 +1,4 @@
-current_data = data008;
+current_data = data010;
 time = .1*(1:size(current_data,1)); %coefficient reflects
                                     %each data point is 100 ms
 
