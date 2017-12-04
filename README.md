@@ -1,26 +1,22 @@
 # Tasks
 ## Matt
-- [ ] Compass
+- [ ] Worksheet 11
 - [ ] Checkoff
-- [ ] Update `Start_Parameters()`
-- [ ] Update `calibrate()` to allow for larger gain setting
-- [ ] Update `Set_Servo_PWM()`
 - [ ] Pseudocode
 
 
 ## Sydney
-- [ ] Ranger
-- [ ] PCA_ISR (change timing logic to Lab 5's style)
-- [ ] Function to change thrust angle, to be called in `Start_Parameters()`
-- [ ] Update `Set_Motor_PWM`
+- [ ] Worksheet 11
 - [ ] Checkoff
+- [ ] Pseudocode
+- [ ] Incorporate ranger to alter `desired_heading`
+- [ ] Comment code
 
 ## Tom
-- [ ] Setup
+- [ ] Worksheet 11
 - [ ] Main logic loop
-- [ ] Battery voltage A/D conversion
-- [ ] Variable nomenclature
-- [ ] Update `Print_Data()`
+- [ ] Determine maximum battery voltage and change `Calculate_Voltage()` accordingly
+- [ ] Determine why `Print_Data()` prints Motor_PW incorrectly
 - [ ] Checkoff
 
 
@@ -94,6 +90,7 @@ OTHER/Joint?
 ## Other Considerations
 1. The fans have greater thrust in the forward direction than in the reverse.
 2. Type casting for signed longs on the right side of Pulse Width setting equations is recommended, as this lab works with very large gains.
+
 An example using Kp as the proportional gain and Kd as the differential gain (with rudder_pw declared as unsigned int). tmp_pw must be a signed long to handle large or negative values.
 ```C
 error = desired_heading–heading;
@@ -110,8 +107,13 @@ previous_error = error;
 
 # Completed Tasks
 ## Matt
-- [x] Lorem ipsum
-
+- [x] Update `Set_Motor_PWM`
+- [x] Update `Start_Parameters()`
+- [x] Update `calibrate()` to allow for larger gain setting
+- [x] Update `Set_Servo_PWM()`
+- [x] PCA_ISR (change timing logic to Lab 5's style)
+- [x] Function to change thrust angle, to be called in `Start_Parameters()`
+- [x] Variable nomenclature
 
 ## Sydney
 - [x] Reconfigure ports
