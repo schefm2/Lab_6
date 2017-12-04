@@ -86,7 +86,7 @@ void main(void)
 
     Start_Parameters();	//Set gains
     Calibrate_Angle();  //Set the thrust angle of the gondola
-    //Calibrate_Fans(); //Useful for diagnosing problems with the fans
+    Calibrate_Fans(); //Useful for diagnosing problems with the fans
     
 	//Reset time/logic-keeping variables
 	compass_flag = ranger_flag = print_flag = 0;
@@ -259,7 +259,7 @@ void Print_Data(void)
     if(print_flag)
 		//Only prints ever ~100 ms
     {
-        printf("\r\n%u, %d, %u, %u, %u, %u", desired_heading, heading_error, range, battery_voltage, Motor_PW, Servo_PW);
+        printf("\r\n%u, %d, %u, %u, %ld, %u", desired_heading, heading_error, range, battery_voltage, Motor_PW, Servo_PW);
         lcd_clear();
         lcd_print("Error: %d\nRange: %u\nMotor: %u\nServo: %u", heading_error, range, Motor_PW, Servo_PW);
         
@@ -347,7 +347,7 @@ void Set_Servo_PWM(void)
 void Set_Motor_PWM(void)
 {
     //Equation from worksheet_11.c that was most reliable for calculating pulse width
-    Motor_PW = (float)MOTOR_NEUTRAL_PW - (float)kp/50*(float)heading_error - (float)kd/50*(float)(heading_error-previous_error);
+    Motor_PW = (float)MOTOR_NEUTRAL_PW + (float)kp/50*(float)heading_error + (float)kd/50*(float)(heading_error-previous_error);
 	
     //Keeps the pulse widths from straining the motor
     Motor_PW = (Motor_PW > MOTOR_FORWARD_PW) ? MOTOR_FORWARD_PW : Motor_PW;
@@ -656,7 +656,7 @@ void Calibrate_Fans(void)
         PCA0CP3 = 0xFFFF - (2*MOTOR_NEUTRAL_PW - Motor_PW); //Condensed form of Neutral - (Motor - Neutral)
         printf("\r\nThis is the CCM3: %u", PCA0CP3);
     }
-    printf("\r\nYour final pulse width was: %u", Servo_PW);
+    printf("\r\nYour final pulse width was: %u", Motor_PW);
 }
 
 
@@ -668,7 +668,7 @@ void Calibrate_Fans(void)
 //
 unsigned int Calculate_Voltage(void)
 {
-    return ((float)read_AD_input(3) / 255) * 10164;
+    return ((float)read_AD_input(3) / 255) * 7400;
 }
 
 //-----------------------------------------------------------------------------
