@@ -1,0 +1,311 @@
+compiler directives
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <c8051_SDCC.h>
+    #include <i2c.h>
+
+declare constants
+    #define RANGER_ADDR 0xE0
+    #define COMPASS_ADDR 0xC0
+    #define PING_CM 0x51
+    #define PCA_START 28672
+
+    #define SERVO_LEFT_PW 2425
+    #define SERVO_CENTER_PW 3085
+    #define SERVO_RIGHT_PW 3245
+
+    #define MOTOR_REVERSE_PW 2027 
+    #define MOTOR_NEUTRAL_PW 2765
+    #define MOTOR_FORWARD_PW 3502
+
+function prototypes
+    Initialization functions
+        void Port_Init(void);
+        void PCA_Init (void);
+        void XBR0_Init(void);
+        void Interrupt_Init(void);
+        void ADC_Init();
+        void SMB_Init();
+
+    Low level functions
+        void Read_Compass(void);
+        void Read_Ranger(void);
+        void Set_Servo_PWM(void);
+        void Set_Motor_PWM(void);
+        void Pause(void);
+        void Wait(void);
+        unsigned int pow(unsigned int a, unsigned char b);
+        unsigned int calibrate(void);
+        unsigned int Calculate_Voltage(void);
+        unsigned char parallel_input(void);
+        unsigned char read_AD_input(unsigned char pin_number);
+
+    High level functions
+        void Start_Parameters(void);
+        void Calibrate_Angle(void);
+        void Calibrate_Fans(void);
+        void Set_Motion(void);
+        void Set_Neutral(void);
+        void Print_Data(void);
+        void Read_Print(void);
+
+Global Variables
+    unsigned char Data[5];
+    signed long Motor_PW;
+    unsigned int desired_heading, current_heading, range, battery_voltage, Servo_PW;
+    unsigned char keyboard, keypad, r_count, c_count, print_count, wait_count;
+    signed int heading_error, previous_error = 0;
+
+    __xdata unsigned int kp = 0, kd = 0;
+
+    __bit servo_stop, motor_stop, compass_flag, ranger_flag, print_flag;
+
+main function
+    Initialize everything
+    
+    Start_Parameters()
+    Calibrate_Angle()
+    
+    begin infinite loop
+        Set battery_voltage using Calculate_Voltage()
+        Set_Motion()
+        Print_Data()
+    end infinite loop
+End main function
+
+Start_Parameters
+    Set Servo_PW and Motor_PW to neutral values
+    Print instructions to keypad and keyboard
+    
+    do
+        Print more instructions
+        Set kp using calibrate()
+    while kp is greater than 50000
+    
+    
+    do
+        Print more instructions
+        Set kd using calibrate()
+    while kp is greater than 50000
+    
+    
+    do
+        Print more instructions
+        Set desired_heading using calibrate()
+    while desired_heading is greater than 3599
+    
+    Wait()
+End Start_Parameters
+
+Set_Motion
+    Read_Compass()
+    Read_Ranger()
+    Set_Motor_PWM()
+End Set_Motion
+
+Print_Data
+    If print_flag is high
+        Print desired_heading, heading_error, range, battery_voltage, Motor_PW, Servo_PW to SecureCRT
+        Print heading_error, range, Motor_PW, Servo_PW to keypad
+        Set print_count and print_flag to 0
+End Print_Data
+
+Read_Compass
+    If compass_flag is high
+        i2c_read_data() to Data[]
+        Set current_heading with Data[]
+        Set previous_error to heading_error
+        Calculate heading_error as the difference between desired_heading and current_heading
+        Set limits on heading_error to keep it in the -1800 to 1800 range
+        Set c_count and compass_flag to 0
+End Read_Compass
+
+Read_Ranger
+    If ranger_flag is high
+        i2c_write_data() to Data[]
+        Set range with Data[]
+        Set r_count and ranger_flag to 0
+End Read_Ranger
+
+Set_Motor_PWM
+    Motor_PW is equal to MOTOR_NEUTRAL_PW + kp/50*heading_error + kd/50*(heading_error - previous_error)
+    Set limits on Motor_PW to keep it in the MOTOR_REVERSE_PW to MOTOR_FORWARD_PW range
+    Set PCAOCP2 equal to 0xFFFF - Motor_PW
+    Pause()
+    Set PCAOCP3 equal to 0xFFFF - (2*MOTOR_NEUTRAL_PW - Motor_PW) 
+End Set_Motor_PWM
+
+Pause
+    set wait_count (incremented in PCA) to 0
+    while wait_count is less than 2
+End Pause
+
+Wait
+    set wait_count (incremented in PCA) to 0
+    while wait_count is less than 50
+End Wait
+
+pow
+    //math function: a^b
+    Declare local variables
+        unsigned char i
+        unsigned char base
+        Set base to a
+    If b is 0
+        return 1
+    for i = 1; i < b; i++
+        Set a to a*base
+    return a 
+End pow
+
+calibrate
+    Declare local variables
+        unsigned char keypad, keyboard, isPress, pressCheck
+        unsigned int value
+        Set isPress and pressCheck to 0
+        Set value to 0
+
+    clear Data[] using pressCheck for loop
+    
+    Begin infinite loop
+        //Read from either keyboard terminal or LCD keypad:
+        Set keyboard to getchar_nw()
+        Set keypad to read_keypad()
+
+        //Don't overload keypad; pause a little
+        Pause()
+
+        //When we get '#' to confirm end of input, done with calibrate:
+        If keyboard OR keypad is '#'
+            Add Data[] up using pow in pressCheck/isPress for loop
+            return value
+
+        //Increments pressCheck when keys are released:
+        If isPress > pressCheck AND keypad is 0xFF AND keyboard is 0xFF
+            Increment pressCheck
+
+        //Got a 6th key pressed then released, reset
+        If pressCheck is 6
+            clear Data[] using pressCheck for loop
+            Set pressCheck, isPress, and value to 0
+            Clear LCD and terminal print screens
+
+        //isPress == pressCheck only when no key held
+        If isPress is equal to pressCheck
+
+            //Keypad press:
+            If keypad is not 0xFF
+                Print keypad character to LCD and terminal
+                Set Data[isPress] to keypad - '0'
+                Increment isPress
+
+            //Keyboard press:
+            If keyboard is not 0xFF
+                Print keyboard character to LCD screen
+                Set Data[isPress] to keyboard - '0'
+                Increment isPress
+    End infinite loop
+End calibrate
+
+parallel_input
+    Declare local variables
+        unsigned char keypad, keyboard
+
+    Set keyboard to getchar_nw()
+    Set keypad to read_keypad()
+
+    //Don't overload keypad; pause a little
+    Pause()
+
+    //If something received, return:
+    If keyboard is not 0xFF
+        return keyboard
+    If keypad is not 0xFF
+        return keypad
+
+    //If nothing received, return 0
+    else
+        return 0
+End parallel_input
+
+read_AD_input
+    Set multiplexer pin to be converted
+    Clear A/D conversion bit
+    Start A/D conversion
+    Wait until conversion finishes
+    return ADC1
+End read_AD_input
+
+XBR0_Init
+    Set crossbar to 0x25
+End XBR0_Init
+
+Port_Init
+    Set P0MDOUT for push/pull on P0.4 to P0.7
+    Set P1MDOUT and P1MDIN for analog input on P1.3
+End Port_Init
+
+Interrupt_Init
+    Enable PCA interrupts in EIE1
+    Enable Global Interrupts
+End Interrupt_Init
+
+PCA_Init
+    Use 16 bit counter with SYSCLK/12
+    Set CCM0 thru CCM3 to 16 bit compare mode 
+    Enable PCA counter
+End PCA_Init
+
+ADC_Init
+    Set REF0CN to 0x03 to use V_ref of 2.4V
+    Enable ADC1
+    Wait ~60 ms for capacitors to charge
+    Set gain of ADC1 to 1 using ADC1CF
+End ADC_Init
+
+SMB_Init
+    Set SCL to 100 kHz
+    Enable the SMBus
+End SMB_Init
+
+PCA_ISR __interrupt 9
+    if CF is high
+        Set CF low
+        Set PCA start so period is 20 ms
+        increment r_count, c_count, print_count, wait_count
+        ranger_flag goes high if r_count > 4
+        compass_flag goes high if c_count > 2
+        print_flag goes high if print_count > 5
+    PCA0CN &= 0x40 to handle other interupt sources
+End PCA_ISR __interrupt 9
+
+Calibrate_Angle
+    unsigned char temp equals 0
+    Print instructions
+    while temp is not 'q'
+        If temp is 'l'
+            decrease Servo_PW by 10
+        If temp is 'r'
+            increase Servo_PW by 10
+        Limit Servo_PW to range of SERVO_LEFT_PW to SERVO_RIGHT_PW
+        Set PCAOCP1 to 0xFFFF - Servo_PW
+    end while loop
+End Calibrate_Angle
+
+Calculate_Voltage
+    return ((float)read_AD_input(3) / 255) * 7400
+End Calculate_Voltage
+
+
+
+
+
+
+
+
+
+
+
+
+
+
