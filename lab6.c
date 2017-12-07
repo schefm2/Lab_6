@@ -258,7 +258,7 @@ void Print_Data(void)
     if(print_flag)
 		//Only prints ever ~100 ms
     {
-        printf("\r\n%u, %d, %u, %u, %ld, %u", desired_heading, heading_error, range, battery_voltage, Motor_PW, Servo_PW);
+        printf("\r\n%d, %d, %u, %u, %ld, %u", desired_heading, heading_error, range, battery_voltage, Motor_PW, Servo_PW);
         lcd_clear();
         lcd_print("Error: %d\nRange: %u\nMotor: %u\nServo: %u", heading_error, range, Motor_PW, Servo_PW);
         
@@ -334,7 +334,8 @@ void Set_Desired_Heading(void)
     if (range>90) {range = 90;}
     
     if(range<48) {desired_heading= original_heading + ((range-48)/38)*1800;}
-    if(range>52) {desired_heading= original_heading + ((range-52)/38)*1800;}
+    else if(range>52) {desired_heading= original_heading + ((range-52)/38)*1800;}
+    else {desired_heading = original_heading;}
 
     desired_heading = (desired_heading<0) ? desired_heading+3599 : desired_heading;
     desired_heading = (desired_heading>3599) ? desired_heading-3599 : desired_heading;
