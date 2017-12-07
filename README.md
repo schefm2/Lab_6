@@ -1,8 +1,9 @@
 # Tasks
 ## Matt
 - [ ] Checkoff
-- [ ] Pseudocode
-
+- [x] Pseudocode
+- [ ] Work on lab notebook
+- [ ] Start off the design reports
 
 ## Sydney
 - [ ] Checkoff
@@ -10,10 +11,10 @@
 - [ ] Incorporate ranger to alter `desired_heading`
 - [ ] Comment code
 
+
 ## Tom
 - [ ] Checkoff
 - [ ] Compiling Lab notebook
-
 
 # Lab_6
 LITEC Lab 6
@@ -77,6 +78,7 @@ OTHER/Joint?
 > 6. kp = 12, kd = 180
 >
 >Additionally, an optimal gain combination should be found.
+>
 >*Use other gain values if you cannot get all of the types of responses—critically damped, underdamped, overdamped, and unstable.*
 
 
