@@ -40,7 +40,7 @@ void SMB_Init();
 //Low Level Functions
 void Read_Compass(void);
 void Read_Ranger(void);
-void Set_Servo_PWM(void);
+void Set_Desired_Heading(void);
 void Set_Motor_PWM(void);
 void Pause(void);
 void Wait(void);
@@ -62,9 +62,9 @@ void Read_Print(void);
 //Global Variables
 unsigned char Data[5];	//Data array used to read and write to I2C Bus slaves
 signed long Motor_PW;
-unsigned int desired_heading, current_heading, range, battery_voltage, Servo_PW;
+unsigned int current_heading, range, battery_voltage, Servo_PW;
 unsigned char keyboard, keypad, r_count, c_count, print_count, wait_count;
-signed int heading_error, previous_error = 0;
+signed int desired_heading, heading_error, previous_error = 0;
 __xdata unsigned int kp = 0, kd = 0;    //Slow write, fast read memory for gains
 
 __bit servo_stop, motor_stop, compass_flag, ranger_flag, print_flag; //flags
@@ -215,7 +215,6 @@ void Set_Motion(void)
 	//read sensors and set pulse widths
     Read_Compass();
     Read_Ranger();
-    Set_Servo_PWM();
     Set_Motor_PWM();
 }
 
@@ -325,20 +324,16 @@ void Read_Ranger(void)
 }
 
 //----------------------------------------------------------------------------
-//Set_Servo_PWM
+//Set_Desired_Heading
 //----------------------------------------------------------------------------
-void Set_Servo_PWM(void)
+void Set_Desired_Heading(void)
 {
-    /*
-	//Servo_PW set to value based on heading_error modified by gain set in Car_Parameters()
-	Servo_PW = gain*(heading_error) + SERVO_CENTER_PW;
+	if (range<10) {desired_heading=(-1800);}
+    else if(range<48) {desired_heading+= ((range-48)/38)*1800;}
+    else if(range>52) {desired_heading+= ((range-52)/42)*1800;}
 
-    //Additional precaution: if Servo_PW somehow exceeds the limits set in Lab 3-1,
-    //then Servo_PW is set to corresponding endpoint of PW range [SERVO_LEFT_PW, SERVO_RIGHT_PW]
-	if (Servo_PW > SERVO_RIGHT_PW) Servo_PW = SERVO_RIGHT_PW;
-	if (Servo_PW < SERVO_LEFT_PW) Servo_PW = SERVO_LEFT_PW;
-	PCA0CP0 = 0xFFFF - Servo_PW;
-    */
+    desired_heading = (desired_heading<0) ? desired_heading+3599 : desired_heading;
+    desired_heading = (desired_heading>3599) ? desired_heading-3599 : desired_heading;
 }
 
 //----------------------------------------------------------------------------
