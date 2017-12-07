@@ -1,4 +1,3 @@
-// LAB 4 CODE - EDIT FOR LAB 6
 /*  
 	Names: Sydney Bahs, Tom Saad, Matthew Scheffer
     Section: 2
@@ -102,46 +101,6 @@ void main(void)
         Print_Data();	//Prints data required for plotting control algorithm performance
         //Read_Print();   //Useful for testing if the compass and ranger function properly
         
-        /*
-        if ( range <= 50 && time >= 20 && first_obstacle == 0)
-            //Detected something at/closer than 50, stop
-        {
-			Motor_PW = MOTOR_NEUTRAL_PW;
-			PCA0CP2 = 0xFFFF - Motor_PW;	//Set car in neutral
-            printf("Press 4 for left or 6 for right.\n\rPress space to return to normal path.\n\r");
-            while((answer != '4') && (answer != '6'))
-			{
-				answer=parallel_input();	//Reads the terminal and LCD keypad for a char
-				Read_Print();	//Prints data required for plotting control algorithm performance 
-								//& reads compass/ranger
-			}
-
-            if(answer=='4')
-            {
-				Servo_PW = SERVO_LEFT_PW;	//Set steering hard left
-            }
-            if(answer=='6')
-            {
-				Servo_PW = SERVO_RIGHT_PW;	//Set steering hard right
-            }
-            PCA0CP0 = 0xFFFF - Servo_PW;	//Outside previous two if's to prevent redundancy
-            Motor_PW = initial_speed;
-            PCA0CP2 = 0xFFFF - Motor_PW;	//Resume forward motion
-            while(getchar_nw() != ' ')
-				//Waits for a space input on keyboard
-            {
-                Read_Print();	//Keeps printing and reading devices while waiting
-            }
-            answer = '0';	//Reset answer
-            first_obstacle++;	//First obstacle has been passed
-        }
-        while ( range <= 35 && first_obstacle > 0)
-			//Car has passed first obstacle and second obstacle is <35 cm away
-        {
-			Motor_PW=MOTOR_NEUTRAL_PW;
-        	PCA0CP2 = 0xFFFF - Motor_PW;	//Set car to neutral
-			Read_Print();	//Print and read data while stopped
-        } */
     }
 }
 
@@ -333,12 +292,15 @@ void Set_Desired_Heading(void)
 	if (range<10) {range = 10;}
     if (range>90) {range = 90;}
     
-    if(range<48) {desired_heading= original_heading + ((range-48)/38)*1800;}
-    else if(range>52) {desired_heading= original_heading + ((range-52)/38)*1800;}
+
+    if(range<48) {desired_heading = original_heading + ((range-48)/38)*1800;}
+    else if(range>52) {desired_heading = original_heading + ((range-52)/38)*1800;}
     else {desired_heading = original_heading;}
 
-    desired_heading = (desired_heading<0) ? desired_heading+3599 : desired_heading;
-    desired_heading = (desired_heading>3599) ? desired_heading-3599 : desired_heading;
+    desired_heading =
+        (desired_heading<0) ? desired_heading+3599 :
+        (desired_heading>3599) ? desired_heading-3599 :
+        desired_heading;
 }
 
 //----------------------------------------------------------------------------
@@ -461,6 +423,7 @@ unsigned int calibrate(void)
 		}
 	}
 }
+
 //----------------------------------------------------------------------------
 //parallel_input
 //----------------------------------------------------------------------------
@@ -485,6 +448,7 @@ unsigned char parallel_input(void)
 	else
 		return 0;	//Return 0 if no key is pressed
 }
+
 //----------------------------------------------------------------------------
 //read_AD_input
 //----------------------------------------------------------------------------
@@ -496,6 +460,7 @@ unsigned char read_AD_input(unsigned char pin_number)
     while(!(ADC1CN & 0x20));	//Waits until conversion completes 
     return ADC1;				//returns converted input, 0-255 inclusive
 }
+
 //----------------------------------------------------------------------------
 //ADC_Init
 //----------------------------------------------------------------------------
