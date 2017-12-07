@@ -54,7 +54,6 @@ void Start_Parameters(void);
 void Calibrate_Angle(void);
 void Calibrate_Fans(void);
 void Set_Motion(void);
-void Set_Neutral(void);
 void Print_Data(void);
 void Read_Print(void);
 
@@ -97,7 +96,6 @@ void main(void)
         
         battery_voltage = Calculate_Voltage();
         Set_Motion();	//Reads compass/ranger and sets the fan pulse widths
-        //Set_Neutral();	//If the slide switch is ON, the car is in neutral and steering is centered
         Print_Data();	//Prints data required for plotting control algorithm performance
         //Read_Print();   //Useful for testing if the compass and ranger function properly
         
@@ -178,23 +176,6 @@ void Set_Motion(void)
 }
 
 //----------------------------------------------------------------------------
-//Set_Neutral
-//----------------------------------------------------------------------------
-void Set_Neutral(void)
-{
-    /*
-	//set servo to center and stop motor
-    if (SS)
-    {
-		PCA0CP0 = 0xFFFF - SERVO_CENTER_PW;
-		PCA0CP2 = 0xFFFF - MOTOR_NEUTRAL_PW;
-
-        while(SS) {}	//wait until slideswitch is turned OFF
-    }
-    */
-}
-
-//----------------------------------------------------------------------------
 //Read_Print
 //----------------------------------------------------------------------------
 //
@@ -217,7 +198,7 @@ void Print_Data(void)
     if(print_flag)
 		//Only prints ever ~100 ms
     {
-        printf("\r\n%d, %d, %u, %u, %ld, %u", desired_heading, heading_error, range, battery_voltage, Motor_PW, Servo_PW);
+        printf("\r\n%d, %u, %d, %u, %u, %ld, %u", desired_heading, current_heading, heading_error, range, battery_voltage, Motor_PW, Servo_PW);
         lcd_clear();
         lcd_print("Error: %d\nRange: %u\nMotor: %u\nServo: %u", heading_error, range, Motor_PW, Servo_PW);
         
@@ -293,8 +274,8 @@ void Set_Desired_Heading(void)
     if (range>90) {range = 90;}
     
 
-    if(range<48) {desired_heading = original_heading + ((range-48)/38)*1800;}
-    else if(range>52) {desired_heading = original_heading + ((range-52)/38)*1800;}
+    if(range<48) {desired_heading = original_heading + ((float)(48 - range)/38)*1800;}
+    else if(range>52) {desired_heading = original_heading - ((float)(range-52)/38)*1800;}
     else {desired_heading = original_heading;}
 
     desired_heading =
