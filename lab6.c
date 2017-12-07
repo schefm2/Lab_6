@@ -237,10 +237,10 @@ void Read_Compass(void)
 
 		//If the error is greater abs(1800) degree-tenths, then error is set to 
 		//explementary angle of original error
-		if (heading_error > 1800)
-			heading_error = heading_error - 3599;
-		if (heading_error < -1800)
-			heading_error = 3599 + heading_error;
+        heading_error =
+            (heading_error > 1800) ? heading_error - 3599 :
+            (heading_error < -1800) ? 3599 + heading_error :
+            heading_error;
         
         compass_flag = 0;
         c_count = 0;
@@ -271,12 +271,13 @@ void Read_Ranger(void)
 //----------------------------------------------------------------------------
 void Set_Desired_Heading(void)
 {
-	if (range<10) {range = 10;}
-    if (range>90) {range = 90;}
-    
+    range =
+        (range < 10) ? 10 :
+        (range > 90) ? 90 :
+        range;
 
-    if(range<48) {desired_heading = original_heading + ((float)(48 - range)/38)*1800;}
-    else if(range>52) {desired_heading = original_heading - ((float)(range-52)/38)*1800;}
+    if (range < 48) {desired_heading = original_heading + ((float)(48 - range)/38)*1800;}
+    else if (range > 52) {desired_heading = original_heading - ((float)(range-52)/38)*1800;}
     else {desired_heading = original_heading;}
 
     desired_heading =
@@ -353,9 +354,15 @@ unsigned int calibrate(void)
 	unsigned char pressCheck = 0;
 	unsigned int value = 0;	//Final value to be returned
 	
+    /*
     for (;pressCheck < 5;pressCheck++)
         Data[pressCheck] = 0;
+    */
+    while (pressCheck < 5) {
+        Data[pressCheck++] = 0;
+    }
     pressCheck = 0;
+
 	while(1)
 	{
 		keyboard = getchar_nw();	//This constantly sets keyboard to whatever char is in the terminal
@@ -568,8 +575,10 @@ void Calibrate_Angle(void)
             Servo_PW += 10;
         
         //Prevent servo from straining pulse widths
-        Servo_PW = (Servo_PW < SERVO_LEFT_PW) ? SERVO_LEFT_PW : Servo_PW;
-        Servo_PW = (Servo_PW > SERVO_RIGHT_PW) ? SERVO_RIGHT_PW : Servo_PW;
+        Servo_PW =
+            (Servo_PW < SERVO_LEFT_PW) ? SERVO_LEFT_PW :
+            (Servo_PW > SERVO_RIGHT_PW) ? SERVO_RIGHT_PW :
+            Servo_PW;
         
         PCA0CP1 = 0xFFFF - Servo_PW;
     }
@@ -595,9 +604,11 @@ void Calibrate_Fans(void)
             Motor_PW += 10;
         
         //Prevent servo from straining pulse widths
-        Motor_PW = (Motor_PW < MOTOR_REVERSE_PW) ? MOTOR_REVERSE_PW : Motor_PW;
-        Motor_PW = (Motor_PW > MOTOR_FORWARD_PW) ? MOTOR_FORWARD_PW : Motor_PW;
-        
+        Motor_PW =
+            (Motor_PW < MOTOR_REVERSE_PW) ? MOTOR_REVERSE_PW :
+            (Motor_PW > MOTOR_FORWARD_PW) ? MOTOR_FORWARD_PW :
+            Motor_PW;
+
         //Set left, then right fans to opposite values
         PCA0CP2 = 0xFFFF - Motor_PW;
         PCA0CP3 = 0xFFFF - (2*MOTOR_NEUTRAL_PW - Motor_PW); //Condensed form of Neutral - (Motor - Neutral)
