@@ -65,7 +65,7 @@ signed long Motor_PW;
 unsigned int current_heading, range, battery_voltage, Servo_PW;
 unsigned char keyboard, keypad, r_count, c_count, print_count, wait_count;
 signed int desired_heading, heading_error, previous_error = 0;
-__xdata unsigned int kp = 0, kd = 0;    //Slow write, fast read memory for gains
+__xdata unsigned int kp = 0, kd = 0, original_heading;    //Slow write, fast read memory for gains
 
 __bit servo_stop, motor_stop, compass_flag, ranger_flag, print_flag; //flags
 
@@ -195,11 +195,11 @@ void Start_Parameters(void)
 		lcd_clear(); //clear screen
 		lcd_print("Enter heading:\n"); //print instructions
 		printf("\r\nSelect a desired heading (0 to 3599). Press # to confirm.\r\n");
-		desired_heading = calibrate();	//take input
+		original_heading = calibrate();	//take input
 		Wait(); //wait a second
 	}
-	while (desired_heading > 3599); //wait until you get appropriate heading
-	printf("\r\nYou selected %u as your desired heading", desired_heading); //print desired heading
+	while (original_heading > 3599); //wait until you get appropriate heading
+	printf("\r\nYou selected %u as your desired heading", original_heading); //print desired heading
     lcd_print("\nFinal value above");  
     Wait();
     
@@ -333,8 +333,8 @@ void Set_Desired_Heading(void)
 	if (range<10) {range = 10;}
     if (range>90) {range = 90;}
     
-    if(range<48) {desired_heading+= ((range-48)/38)*1800;}
-    if(range>52) {desired_heading+= ((range-52)/38)*1800;}
+    if(range<48) {desired_heading= original_heading + ((range-48)/38)*1800;}
+    if(range>52) {desired_heading= original_heading + ((range-52)/38)*1800;}
 
     desired_heading = (desired_heading<0) ? desired_heading+3599 : desired_heading;
     desired_heading = (desired_heading>3599) ? desired_heading-3599 : desired_heading;
