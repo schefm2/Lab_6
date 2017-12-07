@@ -289,6 +289,8 @@ void Read_Compass(void)
         //Stores last heading_error before a new heading_error is calculated
         previous_error = heading_error;
         
+        Set_Desired_Heading();
+        
 		heading_error = (signed int)desired_heading - current_heading;
 		//heading_error is now between -3599 and 3599
 
@@ -328,9 +330,11 @@ void Read_Ranger(void)
 //----------------------------------------------------------------------------
 void Set_Desired_Heading(void)
 {
-	if (range<10) {desired_heading=(-1800);}
-    else if(range<48) {desired_heading+= ((range-48)/38)*1800;}
-    else if(range>52) {desired_heading+= ((range-52)/42)*1800;}
+	if (range<10) {range = 10;}
+    if (range>90) {range = 90;}
+    
+    if(range<48) {desired_heading+= ((range-48)/38)*1800;}
+    if(range>52) {desired_heading+= ((range-52)/38)*1800;}
 
     desired_heading = (desired_heading<0) ? desired_heading+3599 : desired_heading;
     desired_heading = (desired_heading>3599) ? desired_heading-3599 : desired_heading;
