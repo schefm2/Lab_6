@@ -229,7 +229,8 @@ void Read_Compass(void)
         //Stores last heading_error before a new heading_error is calculated
         previous_error = heading_error;
         
-        Set_Desired_Heading();
+        //Set_Desired_Heading();
+        desired_heading = original_heading;
         
 		heading_error = (signed int)desired_heading - current_heading;
 		//heading_error is now between -3599 and 3599
