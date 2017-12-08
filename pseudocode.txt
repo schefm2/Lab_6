@@ -30,7 +30,7 @@ function prototypes
     Low level functions
         void Read_Compass(void);
         void Read_Ranger(void);
-        void Set_Servo_PWM(void);
+        void Set_Desired_Heading(void);
         void Set_Motor_PWM(void);
         void Pause(void);
         void Wait(void);
@@ -56,7 +56,7 @@ Global Variables
     unsigned char keyboard, keypad, r_count, c_count, print_count, wait_count;
     signed int heading_error, previous_error = 0;
 
-    __xdata unsigned int kp = 0, kd = 0;
+    __xdata unsigned int kp = 0, kd = 0, original_heading;
 
     __bit servo_stop, motor_stop, compass_flag, ranger_flag, print_flag;
 
@@ -65,6 +65,8 @@ main function
     
     Start_Parameters()
     Calibrate_Angle()
+    
+    Set all flag and count variables to 0
     
     begin infinite loop
         Set battery_voltage using Calculate_Voltage()
@@ -91,8 +93,8 @@ Start_Parameters
     
     do
         Print more instructions
-        Set desired_heading using calibrate()
-    while desired_heading is greater than 3599
+        Set original_heading using calibrate()
+    while original_heading is greater than 3599
     
     Wait()
 End Start_Parameters
@@ -105,7 +107,7 @@ End Set_Motion
 
 Print_Data
     If print_flag is high
-        Print desired_heading, heading_error, range, battery_voltage, Motor_PW, Servo_PW to SecureCRT
+        Print desired_heading, current_heading, heading_error, range, battery_voltage, Motor_PW, Servo_PW to SecureCRT
         Print heading_error, range, Motor_PW, Servo_PW to keypad
         Set print_count and print_flag to 0
 End Print_Data
@@ -114,6 +116,7 @@ Read_Compass
     If compass_flag is high
         i2c_read_data() to Data[]
         Set current_heading with Data[]
+        Set_Desired_Heading()
         Set previous_error to heading_error
         Calculate heading_error as the difference between desired_heading and current_heading
         Set limits on heading_error to keep it in the -1800 to 1800 range
@@ -126,6 +129,21 @@ Read_Ranger
         Set range with Data[]
         Set r_count and ranger_flag to 0
 End Read_Ranger
+
+Set_Desired_Heading
+    If range is outside the 10 to 90 cm band, limit it
+    If range is < 48
+        desired_heading is set to original_heading + (range - 48)/38*1800
+    If range is > 52
+        desired_heading is set to original_heading + (range - 52)/38*1800
+    Else
+        desired_heading is original_heading
+        
+    If desired_heading is outside the 0 to 3599 band
+        add/subtract 3599 accordingly to put it within 0 to 3599 band
+    Else
+        desired_heading is set to desired_heading
+End Set_Desired_Heading
 
 Set_Motor_PWM
     Motor_PW is equal to MOTOR_NEUTRAL_PW + kp/50*heading_error + kd/50*(heading_error - previous_error)
