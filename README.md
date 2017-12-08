@@ -1,4 +1,4 @@
-##Reminder
+## Reminder
 Sydney's phone is broken, she can be reached through facebook messaging
 
 # Tasks
