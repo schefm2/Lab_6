@@ -1,20 +1,25 @@
+##Reminder
+Sydney's phone is broken, she can be reached through facebook messaging
+
 # Tasks
 ## Matt
-- [ ] Checkoff
-- [x] Pseudocode
-- [ ] Work on lab notebook
-- [ ] Start off the design reports
+- [ ] Gather data for Lab 6 (gain settings, *ask if we need plots for all gain settings for both ranger and nonranger runs*)
+- [ ] Lab 6 Checkoff
+- [ ] Updated pseudocode for Lab 6
+- [ ] Circuit schematics for Lab 5 & 6
 
 ## Sydney
-- [ ] Checkoff
-- [ ] Pseudocode
-- [ ] Incorporate ranger to alter `desired_heading`
-- [ ] Comment code
+- [ ] Lab 6 Checkoff
+- [ ] Comment code for Lab 6
+- [ ] Lab notebook and design report descriptions
 
 
 ## Tom
-- [ ] Checkoff
-- [ ] Compiling Lab notebook
+- [ ] Lab 6 Checkoff
+- [ ] Comment code for Lab 5 (**there are errors!**)
+- [ ] Update pseudocode for Lab 5 (slightly out of date atm)
+- [ ] Data Analysis for design reports and lab notebook
+
 
 # Lab_6
 LITEC Lab 6
@@ -114,15 +119,20 @@ previous_error = error;
 - [x] Determine maximum battery voltage and change `Calculate_Voltage()` accordingly
 - [x] Determine why `Print_Data()` prints Motor_PW incorrectly
 - [x] Worksheet 11
+- [x] Pseudocode
+- [x] Test ranger functionality, design solutions to its problems
 
 ## Sydney
 - [x] Reconfigure ports
 - [x] Worksheet 11
 - [x] Determine maximum battery voltage and change `Calculate_Voltage()` accordingly
 - [x] Determine why `Print_Data()` prints Motor_PW incorrectly
+- [x] Incorporate ranger to alter `desired_heading`
+- [x] Test ranger functionality, design solutions to its problems
 
 ## Tom
 - [x] Lorem ipsum
 - [x] Worksheet 11
 - [x] Determine maximum battery voltage and change `Calculate_Voltage()` accordingly
 - [x] Determine why `Print_Data()` prints Motor_PW incorrectly
+- [x] Test ranger functionality, design solutions to its problems
