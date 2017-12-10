@@ -1,6 +1,9 @@
-current_data = allthedata15;
+current_data = allthedata07;
 time = .1*(1:size(current_data,1)); %coefficient reflects
                                     %each data point is 100 ms
+
+current_data(:,6) = (current_data(:,6) - 2027)/(3502 - 2027)*100;
+current_data(:,7) = (current_data(:,7) - 2425)/(3245 - 2425)*100;
 
 close all
 figure(1)
@@ -13,7 +16,7 @@ plot(time,current_data(:,1),'--k')
 plot(time,current_data(:,2), ':k')
 plot([.1 .1*size(current_data,1)],[0 0], '-k', 'LineWidth',.5)
 xlabel('Time [s]')
-ylabel('Unitless Magnitude')
+ylabel('Normalized Percentage, 0 to 100')
 % xlim([35 50]) %useful for looking in detail at ranger run
 legend('Heading Error', 'Desired Heading','Current Heading', 'Location', 'southeast')
 
