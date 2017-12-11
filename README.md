@@ -3,10 +3,12 @@ Sydney's phone is broken, she can be reached through facebook messaging
 
 # Tasks
 ## Matt
-- [ ] Gather data for Lab 6 (gain settings, *ask if we need plots for all gain settings for both ranger and nonranger runs*)
+- [x] Gather data for Lab 6 (gain settings, *ask if we need plots for all gain settings for both ranger and nonranger runs*)
 - [ ] Lab 6 Checkoff
-- [ ] Updated pseudocode for Lab 6
-- [ ] Circuit schematics for Lab 5 & 6
+- [x] Updated pseudocode for Lab 6
+- [x] Circuit schematics for Lab 5 & 6
+- [ ] Compiling lab notebook
+- [ ] Working on design reports
 
 ## Sydney
 - [ ] Lab 6 Checkoff
