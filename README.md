@@ -10,7 +10,7 @@
 - [ ] Data Analysis
 - [ ] Computer Code
 
-###Design Report
+### Design Report
 - [ ] Introduction
 - [ ] Description of Goal Achieved
 - [ ] Verification
@@ -35,7 +35,7 @@
 - [ ] Data Analysis
 - [ ] Computer Code
 
-###Design Report
+### Design Report
 - [ ] Introduction
 - [ ] Circuit Schematic
 - [ ] Description of Gondola performance
