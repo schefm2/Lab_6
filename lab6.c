@@ -3,7 +3,42 @@
     Section: 2
     Date: 12/11/17
     File name: lab6.c
-    Description: 
+    Description: The following program controls a gondola's steering mechanism
+    while it is mounted on a turntable. Direction that the gondola is pointing
+    in is monitored by an electronic compass on the I2C Bus. When there is a 
+    difference in current and desired compass heading, pulse width modulation
+    is performed using a PCA counter and interrupt service routine to adjust
+    the left and right fans' thrusts to correct the difference. Capture/Compare 
+    modules 1, 2, and 3 are used to control the thrust angle, left and right 
+    fan thrusts, respectively. Heading error is stored in memory before the 
+    next heading error calculation takes place. Current heading error is 
+    multiplied by a user-set proportional gain and added to a pulse width that 
+    sets the thrusts fan to neutral. The difference between the current heading 
+    error and previous error is multiplied by a user-set differential gain and 
+    added to the neutral pulse width as well. This functions to dampen the 
+    natural oscillation of the system when it is run on solely proportional 
+    control. Proportional gain, differential gain, and desired heading are 
+    input by the user at the start of the program, either through the LCD 
+    keypad or by SecureCRT terminal. An ultrasonic ranger is added to the I2C 
+    Bus for additional user control of the desired heading. At a detected range 
+    of 50 cm, the original-input desired heading will remain unchanged. 
+    Increasing the detected range will result in the desired heading increasing 
+    until a range of 90 cm or above is detected, at which point the desired 
+    heading is changed to 180 degrees + original heading. Likewise occurs in 
+    the opposite direction when decreasing the detected range until saturation 
+    at 10 cm, at which point heading is changed to 
+    original heading - 180 degrees. The program monitors battery voltage by 
+    routinely performing an A/D conversion using the ADC1 on the C8051. Both 
+    the desired and current heading, the heading error, the range, the 
+    battery voltage, and motor pulse width and thrust angle pulse widths are 
+    routinely printed to the SecureCRT terminal for later analysis. Once the 
+    Motor pulse width for the thrust fan is calculated, it is inverted for one 
+    of the thrust fans so that the fans will create thrust in antiparallel 
+    directions, inducing rotational movement. This is accomplished by finding 
+    the difference between the thrust motor pulse width and its neutral value, 
+    then subtracting this difference from the neutral pulse width value before 
+    assigning it to the other thrust motor. Thrust angle is adjusted once at 
+    the beginning of the program, after gains have been set.
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -82,7 +117,7 @@ void main(void)
     SMB_Init();
     ADC_Init();	//Must come after PCA_Init to allow capacitors to charge
 
-    Start_Parameters();	//Set gains
+    Start_Parameters();	//Set gains and initial desired heading
     Calibrate_Angle();  //Set the thrust angle of the gondola
     Calibrate_Fans(); //Useful for diagnosing problems with the fans
     
@@ -94,7 +129,7 @@ void main(void)
     while(1)
     {
         
-        battery_voltage = Calculate_Voltage();
+        battery_voltage = Calculate_Voltage();  //Constantly updates the value of battery_voltage
         Set_Motion();	//Reads compass/ranger and sets the fan pulse widths
         Print_Data();	//Prints data required for plotting control algorithm performance
         //Read_Print();   //Useful for testing if the compass and ranger function properly
@@ -107,14 +142,16 @@ void main(void)
 //----------------------------------------------------------------------------
 // Start_Parameters
 //----------------------------------------------------------------------------
-// Allows the user to set a proportional and differential gain for the gondola.
+//
+// Allows the user to set a proportional, differential gain for the gondola;
+// additionally lets the user set an original desired heading.
 //
 void Start_Parameters(void)
 {
     //Start with neutral pulse widths for motor and thrust angle
     Servo_PW = SERVO_CENTER_PW;
     Motor_PW = MOTOR_NEUTRAL_PW;
-    PCA0CP1 = 0xFFFF - Servo_PW;
+    PCA0CP1 = 0xFFFF - Servo_PW;            //Set thrust angle to neutral
     PCA0CP2 = PCA0CP3 = 0xFFFF - Motor_PW;  //Sets both fans to neutral
 
     Wait();         //Wait for 1 second
@@ -131,7 +168,7 @@ void Start_Parameters(void)
 		Wait(); //wait a second
 	}
 	while (kp > 50000); //wait until you get appropriate gain
-	printf("\r\nYou selected %u as your proportional gain", kp); //print steering gain
+	printf("\r\nYou selected %u as your proportional gain", kp); //print prop. gain
     lcd_print("\nFinal value above");  
     Wait();
     
@@ -140,11 +177,11 @@ void Start_Parameters(void)
 		lcd_clear(); //clear screen
 		lcd_print("Enter diff gain:\n"); //print instructions
 		printf("\r\nSelect a differential gain (0 to 50000). Press # to confirm.\r\n");
-		kd = calibrate();	//take 5 digit input
+		kd = calibrate();	//take input
 		Wait(); //wait a second
 	}
 	while (kd > 50000); //wait until you get appropriate gain
-	printf("\r\nYou selected %u as your differential gain", kd); //print integral gain
+	printf("\r\nYou selected %u as your differential gain", kd); //print diff. gain
     lcd_print("\nFinal value above");
     
     do
@@ -167,6 +204,9 @@ void Start_Parameters(void)
 //----------------------------------------------------------------------------
 //Set_Motion
 //----------------------------------------------------------------------------
+//
+// Used to prevent main function from appearing cluttered.
+//
 void Set_Motion(void)
 {
 	//read sensors and set pulse widths
@@ -196,7 +236,7 @@ void Read_Print(void)
 void Print_Data(void)
 {
     if(print_flag)
-		//Only prints ever ~100 ms
+		//Only prints every ~100 ms
     {
         printf("\r\n%d, %u, %d, %u, %u, %ld, %u", desired_heading, current_heading, heading_error, range, battery_voltage, Motor_PW, Servo_PW);
         lcd_clear();
@@ -229,9 +269,8 @@ void Read_Compass(void)
         //Stores last heading_error before a new heading_error is calculated
         previous_error = heading_error;
         
-        Set_Desired_Heading();
-        //desired_heading = original_heading;   //This is uncommented and the above line
-                                                //commented when running without ranger function
+        Set_Desired_Heading();                  //Comment out to remove ranger function
+        //desired_heading = original_heading;   //Uncomment for ranger function
         
 		heading_error = (signed int)desired_heading - current_heading;
 		//heading_error is now between -3599 and 3599
@@ -243,8 +282,8 @@ void Read_Compass(void)
             (heading_error < -1800) ? 3599 + heading_error :
             heading_error;
         
-        compass_flag = 0;
-        c_count = 0;
+        compass_flag = 0;   //Reset compass flag
+        c_count = 0;        //Reset compass timer count
     }
 }
 
@@ -262,7 +301,7 @@ void Read_Ranger(void)
         Data[0] = PING_CM;
         i2c_write_data (RANGER_ADDR, 0, Data, 1 );
         
-        ranger_flag = 0;
+        ranger_flag = 0;    //Reset Ranger flag
         r_count = 0; //r_count reset here to give ranger time to receive its ping
     }
 }
@@ -270,17 +309,27 @@ void Read_Ranger(void)
 //----------------------------------------------------------------------------
 //Set_Desired_Heading
 //----------------------------------------------------------------------------
+//
+// Uses a range detected with the ultrasonic ranger to modify desired_heading.
+// Dead band is 48 to 52 cm, and changes of +/- 180 degrees to the 
+// original_heading are possible. These changes saturate below 10 cm or above 90 cm.
+// Note: the compass is mounted upside-down when the gondola is on the turntable, 
+// meaning that an increased desired_heading results in a counterclockwise turn.
+//
 void Set_Desired_Heading(void)
 {
+    //Ensure that ranges greater than 90 or less than 10 are saturated
     range =
         (range < 10) ? 10 :
         (range > 90) ? 90 :
         range;
 
+    //Low ranges increase the original_heading, high ranges decrease it
     if (range < 48) {desired_heading = original_heading + ((float)(48 - range)/38)*1800;}
     else if (range > 52) {desired_heading = original_heading - ((float)(range-52)/38)*1800;}
-    else {desired_heading = original_heading;}
+    else {desired_heading = original_heading;}  //When in deadband, desired_heading is unchanged
 
+    //Prevents desired_heading from falling outside the compass's range of possible values
     desired_heading =
         (desired_heading<0) ? desired_heading+3599 :
         (desired_heading>3599) ? desired_heading-3599 :
@@ -290,9 +339,14 @@ void Set_Desired_Heading(void)
 //----------------------------------------------------------------------------
 //Set_Motor_PWM
 //----------------------------------------------------------------------------
+//
+// Sets the left fan motor pulse width and sets the right fan motor pulse width 
+// based on the left fan. Uses PD control algorithm.
+//
 void Set_Motor_PWM(void)
 {
     //Equation from worksheet_11.c that was most reliable for calculating pulse width
+    //Changed to use float casting so that fractional gains (after dividing by 50) are achievable
     Motor_PW = (float)MOTOR_NEUTRAL_PW + (float)kp/50*(float)heading_error + (float)kd/50*(float)(heading_error-previous_error);
 	
     //Keeps the pulse widths from straining the motor
@@ -329,7 +383,7 @@ void Wait(void)
 }
 
 //----------------------------------------------------------------------------
-//Pow
+//pow
 //----------------------------------------------------------------------------
 //
 // Stripped back version of math.h power function, used in calibrate(). 
@@ -355,14 +409,11 @@ unsigned int calibrate(void)
 	unsigned char pressCheck = 0;
 	unsigned int value = 0;	//Final value to be returned
 	
-    /*
-    for (;pressCheck < 5;pressCheck++)
-        Data[pressCheck] = 0;
-    */
+    //Clears the Data array to prevent leftover data from interfering
     while (pressCheck < 5) {
         Data[pressCheck++] = 0;
     }
-    pressCheck = 0;
+    pressCheck = 0; //Reset pressCheck for normal use
 
 	while(1)
 	{
@@ -373,10 +424,14 @@ unsigned int calibrate(void)
 		if (keyboard == '#' || keypad == '#') //# is a confirm key, so it will finish calibrate()
         {
             for (pressCheck = 0; 0 < isPress; isPress--)
+                //Highest sig. digit is multiplied by 10 raised to power determined
+                //by the total number of digits; walks through data array while
+                //decrementing this power by one 
             {
                 value += Data[pressCheck++]*pow(10,isPress - 1);
             }
-			return value;	
+            //Returns joined decimal value of digits in Data array
+			return value;
         }
 
 		if (isPress > pressCheck && keypad == 0xFF && keyboard == 0xFF)	//Only increments pressCheck if held key is released
@@ -385,8 +440,10 @@ unsigned int calibrate(void)
 
 		if (pressCheck == 6)	//If a 6th key is pressed, then released
 		{
+            //Clears the Data array
             for (pressCheck = 0;pressCheck < 5;pressCheck++)
                 Data[pressCheck] = 0;
+            
 			isPress = pressCheck = 0;	//Reset the flags
 			lcd_print("\b\b\b\b\b\b");	//Clear value displayed on LCD, needs an extra \b for some reason?
 			printf("\r      \r");	//Clear value displayed on terminal
@@ -400,14 +457,14 @@ unsigned int calibrate(void)
 			{
 				lcd_print("%c",keypad);	//Adds pressed key to LCD screen
 				printf("%c", keypad);	//Adds pressed key to computer terminal
-				Data[isPress] = ((unsigned int)(keypad - '0'));	
+				Data[isPress] = ((unsigned int)(keypad - '0')); //Converts char val. to int val. and stores in Data
 				isPress++;
 			}
 			if (keyboard != 0xFF)	//When an actual key is held down
 			{
 				lcd_print("%c",keyboard);	//Adds pressed key to LCD screen
 				//printf("%c", keyboard); this line is not necessary as getchar_nw automatically executes a putchar()
-				Data[isPress] = ((unsigned int)(keyboard - '0'));
+				Data[isPress] = ((unsigned int)(keyboard - '0'));   //Converts char val. to int val. and stores in Data
 				isPress++;	
 			}
 		}
@@ -497,7 +554,7 @@ void Interrupt_Init(void)
 // XBR0_Init
 //-----------------------------------------------------------------------------
 //
-// Set up the crossbar
+// Set up the crossbar.
 //
 void XBR0_Init(void)
 {
@@ -509,14 +566,12 @@ void XBR0_Init(void)
 // PCA_Init
 //-----------------------------------------------------------------------------
 //
-// Set up Programmable Counter Array
+// Set up Programmable Counter Array.
 //
 void PCA_Init(void)
 {
-    // reference to the sample code in Example 4.5 - Pulse Width Modulation implemented using
-    // Use a 16 bit counter with SYSCLK/12.
-    PCA0MD = 0x81;
-    PCA0CPM0 = PCA0CPM1 = PCA0CPM2 = PCA0CPM3 = 0xC2;		//Sets CCM0 thru CCM3 in 16-bit compare mode, enables PWM
+    PCA0MD = 0x81;  //Use a 16 bit counter with SYSCLK/12.
+    PCA0CPM0 = PCA0CPM1 = PCA0CPM2 = PCA0CPM3 = 0xC2;   //Sets CCM0 thru CCM3 in 16-bit compare mode, enables PWM
     PCA0CN = 0x40; //Enable PCA counter
 }
 
@@ -524,7 +579,7 @@ void PCA_Init(void)
 // PCA_ISR
 //-----------------------------------------------------------------------------
 //
-// Interrupt Service Routine for Programmable Counter Array Overflow Interrupt
+// Interrupt Service Routine for Programmable Counter Array Overflow Interrupt.
 //
 void PCA_ISR ( void ) __interrupt 9
 {
@@ -532,24 +587,24 @@ void PCA_ISR ( void ) __interrupt 9
     {
         CF=0; //clear flag
         PCA0 = PCA_START;//determine period to 20 ms
+        //Increment counts
         r_count++;
 		c_count++;
         print_count++;
         wait_count++;
         
-        ranger_flag = (r_count > 4) ? 1 : ranger_flag ;
-        compass_flag = (c_count > 2) ? 1 : compass_flag ;
+        ranger_flag = (r_count > 4) ? 1 : ranger_flag ; //Ranger flag raised every ~80 ms
+        compass_flag = (c_count > 2) ? 1 : compass_flag ;   //Compass flag raised every ~40 ms
         print_flag = (print_count > 5) ? 1 : print_flag ; //print flag raised every ~100 ms
     }
     PCA0CN &= 0x40; //Handle other interupt sources
-    // reference to the sample code in Example 4.5 -Pulse Width Modulation implemented using
 }
 
 //-----------------------------------------------------------------------------
 // SMB_Init
 //-----------------------------------------------------------------------------
 //
-// Set up the I2C Bus
+// Set up the I2C Bus.
 //
 void SMB_Init()
 {
@@ -561,13 +616,14 @@ void SMB_Init()
 // Calibrate_Angle
 //-----------------------------------------------------------------------------
 //
-// 
+// Allows the user to manually set the thrust angle of the gondola.
 //
 void Calibrate_Angle(void)
 {
-    unsigned char temp = 0;
+    unsigned char temp = 0; //Used for storing the pressed key
     printf("\r\nPlease press l and r to rotate the thrust angle of the gondola.\r\nPress q to confirm the angle.\r\n");
     while (temp != 'q')
+        //Runs until the user presses the confirm key 'q'
     {
         temp = getchar();
         if (temp == 'l')
@@ -581,7 +637,7 @@ void Calibrate_Angle(void)
             (Servo_PW > SERVO_RIGHT_PW) ? SERVO_RIGHT_PW :
             Servo_PW;
         
-        PCA0CP1 = 0xFFFF - Servo_PW;
+        PCA0CP1 = 0xFFFF - Servo_PW;    //Sets the modified pulse width
     }
     printf("\r\nYour final pulse width was: %u", Servo_PW);
 }
@@ -590,11 +646,12 @@ void Calibrate_Angle(void)
 // Calibrate_Fans
 //-----------------------------------------------------------------------------
 //
-// 
+// Allows the user to manually ramp up or ramp down the thrust of the fans. 
+// Particularly useful for debugging involving fans that seem to not work.
 //
 void Calibrate_Fans(void)
 {
-    unsigned char temp = 0;
+    unsigned char temp = 0; //Used for storing the pressed key
     printf("\r\nPlease press l and r to change the motor PW.\r\nPress q to confirm the PW.\r\n");
     while (temp != 'q')
     {
@@ -613,7 +670,7 @@ void Calibrate_Fans(void)
         //Set left, then right fans to opposite values
         PCA0CP2 = 0xFFFF - Motor_PW;
         PCA0CP3 = 0xFFFF - (2*MOTOR_NEUTRAL_PW - Motor_PW); //Condensed form of Neutral - (Motor - Neutral)
-        printf("\r\nThis is the CCM3: %u", PCA0CP3);
+        printf("\r\nThis is the CCM3: %u", PCA0CP3);    //Printed to ensure that CCM3 was properly set
     }
     printf("\r\nYour final pulse width was: %u", Motor_PW);
 }
