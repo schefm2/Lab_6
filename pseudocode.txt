@@ -294,7 +294,7 @@ PCA_ISR __interrupt 9
         ranger_flag goes high if r_count > 4
         compass_flag goes high if c_count > 2
         print_flag goes high if print_count > 5
-    PCA0CN &= 0x40 to handle other interupt sources
+    PCA0CN &= 0x40 to handle other interrupt sources
 End PCA_ISR __interrupt 9
 
 Calibrate_Angle
