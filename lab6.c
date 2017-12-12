@@ -346,7 +346,7 @@ void Set_Desired_Heading(void)
 void Set_Motor_PWM(void)
 {
     //Equation from worksheet_11.c that was most reliable for calculating pulse width
-    //Changed to use float casting so that fractional gains (after dividing by 50) are achievable
+    //Changed to use float casting so that float gains (after dividing by 50) are achievable
     Motor_PW = (float)MOTOR_NEUTRAL_PW + (float)kp/50*(float)heading_error + (float)kd/50*(float)(heading_error-previous_error);
 	
     //Keeps the pulse widths from straining the motor
