@@ -1,23 +1,65 @@
-## Reminder
-Sydney's phone is broken, she can be reached through facebook messaging
-
 # Tasks
+## Lab 5
+### Notebook
+- [ ] Lab Title
+- [ ] Lab Description
+- [ ] Worksheets
+- [ ] Pseudo-code
+- [x] Circuit Schematics - Matt
+- [ ] Data & Notes
+- [ ] Data Analysis
+- [ ] Computer Code
+
+###Design Report
+- [ ] Introduction
+- [ ] Description of Goal Achieved
+- [ ] Verification
+- [ ] Data Plots
+- [ ] Data Analysis
+- [ ] What Was Learned
+- [ ] Problems Encountered & Solutions
+- [ ] Suggested Improvements to HW & SW (Our end, not theirs)
+- [ ] Code Upload
+- [ ] Formatting & Neatness
+- [ ] Division of Labor Page
+- [ ] HW #12
+
+## Lab 6
+### Notebook
+- [ ] Lab Title
+- [ ] Lab Description
+- [ ] Worksheets
+- [x] Pseudo-code - Matt
+- [x] Circuit Schematics - Matt
+- [ ] Data & Notes
+- [ ] Data Analysis
+- [ ] Computer Code
+
+###Design Report
+- [ ] Introduction
+- [ ] Circuit Schematic
+- [ ] Description of Gondola performance
+- [ ] Verification
+- [ ] Data Plots
+- [ ] Data Analysis
+- [ ] What Was Learned
+- [ ] Problems Encountered & Solutions
+- [ ] Pseudocode
+- [ ] Code Upload
+- [ ] Formatting & Neatness
+- [ ] Division of Labor Page
+- [ ] HW #12
+
 ## Matt
-- [x] Gather data for Lab 6 (gain settings, *ask if we need plots for all gain settings for both ranger and nonranger runs*)
-- [ ] Lab 6 Checkoff
-- [x] Updated pseudocode for Lab 6
-- [x] Circuit schematics for Lab 5 & 6
 - [ ] Compiling lab notebook
 - [ ] Working on design reports
 
 ## Sydney
-- [ ] Lab 6 Checkoff
 - [ ] Comment code for Lab 6
 - [ ] Lab notebook and design report descriptions
 
 
 ## Tom
-- [ ] Lab 6 Checkoff
 - [ ] Comment code for Lab 5 (**there are errors!**)
 - [ ] Update pseudocode for Lab 5 (slightly out of date atm)
 - [ ] Data Analysis for design reports and lab notebook
@@ -123,6 +165,11 @@ previous_error = error;
 - [x] Worksheet 11
 - [x] Pseudocode
 - [x] Test ranger functionality, design solutions to its problems
+- [x] Gather data for Lab 6 (gain settings, *ask if we need plots for all gain settings for both ranger and nonranger runs*)
+- [x] Lab 6 Checkoff
+- [x] Updated pseudocode for Lab 6
+- [x] Circuit schematics for Lab 5 & 6
+- [x] Ask if Lab 6 data just needs to be under, over, crit damped, unstable, optimal, and optimal with ranger
 
 ## Sydney
 - [x] Reconfigure ports
@@ -131,10 +178,12 @@ previous_error = error;
 - [x] Determine why `Print_Data()` prints Motor_PW incorrectly
 - [x] Incorporate ranger to alter `desired_heading`
 - [x] Test ranger functionality, design solutions to its problems
+- [x] Lab 6 Checkoff
 
 ## Tom
 - [x] Lorem ipsum
 - [x] Worksheet 11
 - [x] Determine maximum battery voltage and change `Calculate_Voltage()` accordingly
 - [x] Determine why `Print_Data()` prints Motor_PW incorrectly
+- [x] Lab 6 Checkoff
 - [x] Test ranger functionality, design solutions to its problems
