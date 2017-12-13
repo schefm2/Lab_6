@@ -4,51 +4,51 @@
 - [ ] Lab Title
 - [ ] Lab Description
 - [ ] Worksheets
-- [x] Pseudo-code - Matt
-- [x] Circuit Schematics - Matt
+- [x] Pseudo-code - **Matt**
+- [x] Circuit Schematics - **Matt**
 - [ ] Data & Notes
 - [ ] Data Analysis
 - [x] Computer Code
 
 ### Design Report
-- [ ] Introduction
-- [ ] Description of Goal Achieved
-- [ ] Verification
+- [x] Introduction - **Sydney**
+- [x] Description of Goal Achieved - **Sydney**
+- [x] Verification - **Sydney**
 - [ ] Data Plots
 - [ ] Data Analysis
 - [ ] What Was Learned
 - [ ] Problems Encountered & Solutions
 - [ ] Suggested Improvements to HW & SW (Our end, not theirs)
-- [x] Code Upload - Matt
+- [x] Code Upload - **Matt**
 - [ ] Formatting & Neatness
 - [ ] Division of Labor Page
-- [ ] HW #12 - Matt, 
+- [ ] HW #12 - **Matt**, 
 
 ## Lab 6
 ### Notebook
 - [ ] Lab Title
 - [ ] Lab Description
 - [ ] Worksheets
-- [x] Pseudo-code - Matt
-- [x] Circuit Schematics - Matt
+- [x] Pseudo-code - **Matt**
+- [x] Circuit Schematics - **Matt**
 - [ ] Data & Notes
 - [ ] Data Analysis
-- [x] Computer Code - Matt
+- [x] Computer Code - **Matt**
 
 ### Design Report
-- [ ] Introduction
-- [x] Circuit Schematic - Matt
-- [ ] Description of Gondola performance
-- [ ] Verification
-- [x] Data Plots - Matt
-- [x] Data Analysis - Matt
+- [x] Introduction - **Sydney**
+- [x] Circuit Schematic - **Matt**
+- [x] Description of Gondola performance - **Sydney**
+- [x] Verification - **Sydney**
+- [x] Data Plots - **Matt**
+- [x] Data Analysis - **Matt**
 - [ ] What Was Learned
 - [ ] Problems Encountered & Solutions
-- [x] Pseudocode - Matt
-- [x] Code Upload - Matt
+- [x] Pseudocode - **Matt**
+- [x] Code Upload - **Matt**
 - [ ] Formatting & Neatness
 - [ ] Division of Labor Page
-- [ ] HW #12 - Matt, 
+- [ ] HW #12 - **Matt**, 
 
 ## Matt
 - [ ] Compiling lab notebook
