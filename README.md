@@ -37,11 +37,11 @@
 
 ### Design Report
 - [ ] Introduction
-- [ ] Circuit Schematic
+- [x] Circuit Schematic - Matt
 - [ ] Description of Gondola performance
 - [ ] Verification
-- [ ] Data Plots
-- [ ] Data Analysis
+- [x] Data Plots - Matt
+- [x] Data Analysis - Matt
 - [ ] What Was Learned
 - [ ] Problems Encountered & Solutions
 - [x] Pseudocode - Matt
