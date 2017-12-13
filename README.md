@@ -14,8 +14,8 @@
 - [x] Introduction - **Sydney**
 - [x] Description of Goal Achieved - **Sydney**
 - [x] Verification - **Sydney**
-- [ ] Data Plots
-- [ ] Data Analysis
+- [x] Data Plots - **Matt**
+- [x] Data Analysis - **Matt**
 - [ ] What Was Learned
 - [ ] Problems Encountered & Solutions
 - [ ] Suggested Improvements to HW & SW (Our end, not theirs)

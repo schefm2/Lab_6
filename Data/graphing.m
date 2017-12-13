@@ -34,9 +34,10 @@ set(gcf,'Visible','on') %Automatically pop out the figure
 clf
 
 subplot(2,1,1)
-plot(time,current_data(:,5),'-k')
+plot(time,current_data(:,1),'-k')
+legend('Desired Heading')
 xlabel('Time [s]')
-ylabel('Battery Voltage [mV]')
+ylabel('Tenths of a Degree')
 
 subplot(2,1,2)
 plot(time,current_data(:,4),'-k')
@@ -45,10 +46,12 @@ ylabel('Range [cm]')
 ylim([0 300])
 
 %----------------------------------------------------------------
-%For the data with the fans turned off and derivative gain set to 0
+%Motor pulse width and its effect on battery voltage
 figure(3)
 set(gcf,'Visible','on')
 clf
+
+current_data(:,5) = current_data(:,5)/7500*2.4/.236;
 
 subplot(2,1,1)
 hold on
@@ -62,4 +65,18 @@ plot(time,current_data(:,5),'-k')
 legend('Battery Voltage')
 xlabel('Time [s]')
 ylabel('Voltage [mV]')
+% %----------------------------------------------------------------
+% figure(4)
+% set(gcf,'Visible','on')
+% clf
+% 
+% hold on
+% plot(time,current_data(:,2),'-k')
+% plot(time,current_data(:,3),'--k')
+% plot([0 max(time)],[1800 1800], ':k')
+% plot([0 max(time)],[-1800 -1800], ':k')
+% plot([0 max(time)],[3600 3600], ':k')
+% legend('Actual Heading','Heading Error')
+% xlabel('Time [s]')
+% ylabel('Tenths of a Degree')
 
