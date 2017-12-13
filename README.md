@@ -4,11 +4,11 @@
 - [ ] Lab Title
 - [ ] Lab Description
 - [ ] Worksheets
-- [ ] Pseudo-code
+- [x] Pseudo-code - Matt
 - [x] Circuit Schematics - Matt
 - [ ] Data & Notes
 - [ ] Data Analysis
-- [ ] Computer Code
+- [x] Computer Code
 
 ### Design Report
 - [ ] Introduction
@@ -19,10 +19,10 @@
 - [ ] What Was Learned
 - [ ] Problems Encountered & Solutions
 - [ ] Suggested Improvements to HW & SW (Our end, not theirs)
-- [ ] Code Upload
+- [x] Code Upload - Matt
 - [ ] Formatting & Neatness
 - [ ] Division of Labor Page
-- [ ] HW #12
+- [ ] HW #12 - Matt, 
 
 ## Lab 6
 ### Notebook
@@ -33,7 +33,7 @@
 - [x] Circuit Schematics - Matt
 - [ ] Data & Notes
 - [ ] Data Analysis
-- [ ] Computer Code
+- [x] Computer Code - Matt
 
 ### Design Report
 - [ ] Introduction
@@ -44,11 +44,11 @@
 - [ ] Data Analysis
 - [ ] What Was Learned
 - [ ] Problems Encountered & Solutions
-- [ ] Pseudocode
-- [ ] Code Upload
+- [x] Pseudocode - Matt
+- [x] Code Upload - Matt
 - [ ] Formatting & Neatness
 - [ ] Division of Labor Page
-- [ ] HW #12
+- [ ] HW #12 - Matt, 
 
 ## Matt
 - [ ] Compiling lab notebook
